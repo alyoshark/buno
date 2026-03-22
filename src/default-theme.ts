@@ -1,4 +1,4 @@
-import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, type Post } from "./theme-api.ts";
+import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "./theme-api.ts";
 
 const DEFAULT_THEME_CSS = `
 :root {
@@ -32,7 +32,7 @@ body {
 }
 a { color: inherit; }
 .site-shell { width: var(--content-width); margin: 0 auto; padding: 2rem 0 4rem; }
-.site-header { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 2rem; }
+.site-header { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; margin-bottom: 1rem; }
 .site-home-link {
   font-family: var(--font-display);
   font-size: clamp(1.8rem, 3vw, 2.5rem);
@@ -40,7 +40,22 @@ a { color: inherit; }
   text-decoration: none;
   text-transform: uppercase;
 }
-.site-tagline { margin: 0; color: var(--muted); }
+.site-tagline { margin: 0 0 2rem; color: var(--muted); }
+.site-nav,
+.post-meta,
+.page-meta,
+.pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.site-nav a,
+.post-preview-link,
+.taxonomy-link,
+.archive-post a,
+.pagination-link { text-decoration: none; }
 .page-card {
   background: color-mix(in srgb, var(--paper) 88%, white);
   border: 1px solid var(--border);
@@ -49,8 +64,14 @@ a { color: inherit; }
   padding: clamp(1.25rem, 3vw, 3rem);
   backdrop-filter: blur(12px);
 }
-.post-list { display: grid; gap: 1.25rem; }
-.post-preview {
+.post-list,
+.taxonomy-list,
+.archive-list,
+.archive-posts,
+.section-stack { display: grid; gap: 1.25rem; }
+.post-preview,
+.taxonomy-card,
+.archive-group {
   padding: 1.25rem;
   border: 1px solid var(--border);
   border-radius: calc(var(--radius) * 0.7);
@@ -65,17 +86,29 @@ a { color: inherit; }
 }
 .post-preview-title { font-size: clamp(1.4rem, 2vw, 1.9rem); }
 .post-title { font-size: clamp(2.4rem, 6vw, 4.8rem); margin-bottom: 1rem; }
-.post-preview-link { text-decoration: none; }
-.post-meta,
-.page-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
 .post-summary,
 .empty-state { color: var(--muted); }
+.taxonomy-link {
+  font-family: var(--font-display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.archive-post {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.pagination-link,
+.pagination-current {
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+.pagination-current {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
 .content { font-size: 1.05rem; }
 .content > :first-child { margin-top: 0; }
 .content-heading {
@@ -225,21 +258,27 @@ const theme = defineTheme({
     <div class="site-shell" id="site-shell">
       <header class="site-header" id="site-header">
         <a class="site-home-link" href="/">${escapeHtml(site.title)}</a>
-        <p class="site-tagline">${escapeHtml(site.description)}</p>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/tags/">Tags</a>
+          <a href="/archives/">Archives</a>
+        </nav>
       </header>
+      <p class="site-tagline">${escapeHtml(site.description)}</p>
       <main id="site-main">
         ${content}
       </main>
     </div>
   </body>
 </html>`,
-  renderIndex: ({ site, posts }) => `
+  renderIndex: ({ site, posts, pagination }) => `
 <section class="page-card">
   <header class="page-header">
     <h1 class="post-title">${escapeHtml(site.title)}</h1>
     <p class="site-tagline">${escapeHtml(site.description)}</p>
   </header>
   <section class="post-list">${posts.length > 0 ? posts.map(renderPostPreview).join("\n") : `<p class="empty-state">No posts found yet.</p>`}</section>
+  ${renderPagination(pagination)}
 </section>`,
   renderPost: ({ post }) => `
 <article class="page-card post-page" id="${post.id}">
@@ -256,6 +295,36 @@ const theme = defineTheme({
     ${theme.renderMarkdown(post.body)}
   </section>
 </article>`,
+  renderTagsIndex: ({ site, tags, pagination }) => `
+<section class="page-card section-stack">
+  <header class="page-header">
+    <p class="page-meta"><a href="/">Back to home</a></p>
+    <h1 class="post-title">Tags</h1>
+    <p class="site-tagline">${escapeHtml(site.title)} has ${pagination.totalItems} tag${pagination.totalItems === 1 ? "" : "s"}.</p>
+  </header>
+  <section class="taxonomy-list">${tags.length > 0 ? tags.map(renderTagSummary).join("\n") : `<p class="empty-state">No tags found yet.</p>`}</section>
+  ${renderPagination(pagination)}
+</section>`,
+  renderTag: ({ tag, pagination }) => `
+<section class="page-card section-stack" id="tag-${escapeHtmlAttr(tag.slug)}">
+  <header class="page-header">
+    <p class="page-meta"><a href="/tags/">Back to tags</a></p>
+    <h1 class="post-title">${escapeHtml(tag.name)}</h1>
+    <p class="site-tagline">${tag.count} post${tag.count === 1 ? "" : "s"} in this tag.</p>
+  </header>
+  <section class="post-list">${tag.posts.map(renderPostPreview).join("\n")}</section>
+  ${renderPagination(pagination)}
+</section>`,
+  renderArchives: ({ archives, pagination }) => `
+<section class="page-card section-stack">
+  <header class="page-header">
+    <p class="page-meta"><a href="/">Back to home</a></p>
+    <h1 class="post-title">Archives</h1>
+    <p class="site-tagline">Posts grouped by month.</p>
+  </header>
+  <section class="archive-list">${archives.length > 0 ? archives.map(renderArchiveGroup).join("\n") : `<p class="empty-state">No dated posts found yet.</p>`}</section>
+  ${renderPagination(pagination)}
+</section>`,
 });
 
 export default theme;
@@ -280,6 +349,45 @@ function renderTagList(tags: string[]): string {
   }
 
   return `<ul class="tag-list">${tags.map((tag) => `<li class="tag">${escapeHtml(tag)}</li>`).join("")}</ul>`;
+}
+
+function renderTagSummary(tag: TagSummary): string {
+  return `<article class="taxonomy-card" id="tag-summary-${escapeHtmlAttr(tag.slug)}">
+  <h2><a class="taxonomy-link" href="${escapeHtmlAttr(tag.url)}">${escapeHtml(tag.name)}</a></h2>
+  <p class="page-meta">${tag.count} post${tag.count === 1 ? "" : "s"}</p>
+</article>`;
+}
+
+function renderArchiveGroup(group: ArchiveGroup): string {
+  return `<section class="archive-group" id="${escapeHtmlAttr(group.anchor)}">
+  <h2 class="post-preview-title">${escapeHtml(group.label)}</h2>
+  <div class="archive-posts">${group.posts.map(renderArchivePost).join("")}</div>
+</section>`;
+}
+
+function renderArchivePost(post: Post): string {
+  return `<article class="archive-post" id="archive-post-${escapeHtmlAttr(post.slug)}">
+  <a href="${escapeHtmlAttr(post.url)}">${escapeHtml(post.title)}</a>
+  <span class="page-meta">${post.date ? escapeHtml(formatDate(post.date)) : ""}</span>
+</article>`;
+}
+
+function renderPagination(pagination: PaginationInfo): string {
+  if (pagination.totalPages <= 1) {
+    return "";
+  }
+
+  return `<nav class="pagination" aria-label="Pagination">
+  ${pagination.prevUrl ? `<a class="pagination-link" href="${escapeHtmlAttr(pagination.prevUrl)}">Previous</a>` : ""}
+  ${pagination.links
+    .map((link) =>
+      link.current
+        ? `<span class="pagination-current" aria-current="page">${link.number}</span>`
+        : `<a class="pagination-link" href="${escapeHtmlAttr(link.url)}">${link.number}</a>`,
+    )
+    .join("")}
+  ${pagination.nextUrl ? `<a class="pagination-link" href="${escapeHtmlAttr(pagination.nextUrl)}">Next</a>` : ""}
+</nav>`;
 }
 
 function alignAttr(align?: string): string {

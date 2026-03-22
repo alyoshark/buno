@@ -23,6 +23,32 @@ export type BlogConfig = {
   title?: string;
   description?: string;
   theme?: string;
+  pageSize?: number;
+  page_size?: number;
+  pagination?: {
+    pageSize?: number;
+    page_size?: number;
+  };
+};
+
+export type TagSummary = {
+  name: string;
+  slug: string;
+  url: string;
+  count: number;
+};
+
+export type TagPage = TagSummary & {
+  posts: Post[];
+};
+
+export type ArchiveGroup = {
+  key: string;
+  year: number;
+  month: number;
+  label: string;
+  anchor: string;
+  posts: Post[];
 };
 
 export type ThemeAsset = {
@@ -46,11 +72,46 @@ export type ThemeRenderDocumentArgs = {
 export type ThemeRenderIndexArgs = {
   site: SiteMetadata;
   posts: Post[];
+  pagination: PaginationInfo;
 };
 
 export type ThemeRenderPostArgs = {
   site: SiteMetadata;
   post: Post;
+};
+
+export type ThemeRenderTagsIndexArgs = {
+  site: SiteMetadata;
+  tags: TagSummary[];
+  pagination: PaginationInfo;
+};
+
+export type ThemeRenderTagArgs = {
+  site: SiteMetadata;
+  tag: TagPage;
+  pagination: PaginationInfo;
+};
+
+export type ThemeRenderArchivesArgs = {
+  site: SiteMetadata;
+  archives: ArchiveGroup[];
+  pagination: PaginationInfo;
+};
+
+export type PaginationLink = {
+  number: number;
+  url: string;
+  current: boolean;
+};
+
+export type PaginationInfo = {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalItems: number;
+  prevUrl?: string;
+  nextUrl?: string;
+  links: PaginationLink[];
 };
 
 export type Theme = {
@@ -62,6 +123,9 @@ export type Theme = {
   renderDocument: (args: ThemeRenderDocumentArgs) => string;
   renderIndex: (args: ThemeRenderIndexArgs) => string;
   renderPost: (args: ThemeRenderPostArgs) => string;
+  renderTagsIndex: (args: ThemeRenderTagsIndexArgs) => string;
+  renderTag: (args: ThemeRenderTagArgs) => string;
+  renderArchives: (args: ThemeRenderArchivesArgs) => string;
 };
 
 export function defineTheme(theme: Omit<Theme, "renderMarkdown"> & { renderMarkdown?: Theme["renderMarkdown"] }): Theme {

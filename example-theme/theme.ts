@@ -1,4 +1,4 @@
-import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, type Post } from "../src/theme-api.ts";
+import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "../src/theme-api.ts";
 
 const theme = defineTheme({
   name: "example-theme",
@@ -58,15 +58,20 @@ const theme = defineTheme({
     <div class="theme-frame">
       <header class="theme-site-header">
         <a class="theme-home-link" href="/">${escapeHtml(site.title)}</a>
-        <p class="theme-site-description">${escapeHtml(site.description)}</p>
+        <nav class="theme-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="/tags/">Tags</a>
+          <a href="/archives/">Archives</a>
+        </nav>
       </header>
+      <p class="theme-site-description">${escapeHtml(site.description)}</p>
       <main class="theme-main">
         ${content}
       </main>
     </div>
   </body>
 </html>`,
-  renderIndex: ({ site, posts }) => `
+  renderIndex: ({ site, posts, pagination }) => `
 <section class="theme-hero">
   <p class="theme-eyebrow">Example Theme</p>
   <h1 class="theme-title">${escapeHtml(site.title)}</h1>
@@ -74,7 +79,8 @@ const theme = defineTheme({
 </section>
 <section class="theme-feed">
   ${posts.length > 0 ? posts.map(renderPostPreview).join("\n") : `<p class="theme-empty">No posts found yet.</p>`}
-</section>`,
+</section>
+${renderPagination(pagination)}`,
   renderPost: ({ post, site }) => `
 <article class="theme-post" id="${escapeHtmlAttr(post.id)}">
   <p class="theme-back"><a href="/">Return to ${escapeHtml(site.title)}</a></p>
@@ -90,6 +96,36 @@ const theme = defineTheme({
     ${theme.renderMarkdown(post.body)}
   </section>
 </article>`,
+  renderTagsIndex: ({ tags, pagination }) => `
+<section class="theme-hero">
+  <p class="theme-eyebrow">Browse</p>
+  <h1 class="theme-title">Tags</h1>
+  <p class="theme-intro">Every tag in the site with a direct count.</p>
+</section>
+<section class="theme-feed">
+  ${tags.length > 0 ? tags.map(renderTagSummary).join("\n") : `<p class="theme-empty">No tags found yet.</p>`}
+</section>
+${renderPagination(pagination)}`,
+  renderTag: ({ tag, pagination }) => `
+<section class="theme-hero">
+  <p class="theme-eyebrow">Tag</p>
+  <h1 class="theme-title">${escapeHtml(tag.name)}</h1>
+  <p class="theme-intro">${tag.count} post${tag.count === 1 ? "" : "s"} filed under this tag.</p>
+</section>
+<section class="theme-feed">
+  ${tag.posts.map(renderPostPreview).join("\n")}
+</section>
+${renderPagination(pagination)}`,
+  renderArchives: ({ archives, pagination }) => `
+<section class="theme-hero">
+  <p class="theme-eyebrow">Browse</p>
+  <h1 class="theme-title">Archives</h1>
+  <p class="theme-intro">A month-by-month view of dated posts.</p>
+</section>
+<section class="theme-archive-list">
+  ${archives.length > 0 ? archives.map(renderArchiveGroup).join("\n") : `<p class="theme-empty">No dated posts found yet.</p>`}
+</section>
+${renderPagination(pagination)}`,
 });
 
 function renderPostPreview(post: Post): string {
@@ -111,6 +147,47 @@ function renderTagList(tags: string[]): string {
   }
 
   return `<ul class="theme-tags">${tags.map((tag) => `<li class="theme-tag">${escapeHtml(tag)}</li>`).join("")}</ul>`;
+}
+
+function renderTagSummary(tag: TagSummary): string {
+  return `<article class="theme-card" id="theme-tag-${escapeHtmlAttr(tag.slug)}">
+  <p class="theme-card-label">Tag</p>
+  <h2 class="theme-card-title"><a href="${escapeHtmlAttr(tag.url)}">${escapeHtml(tag.name)}</a></h2>
+  <p class="theme-card-summary">${tag.count} post${tag.count === 1 ? "" : "s"}</p>
+</article>`;
+}
+
+function renderArchiveGroup(group: ArchiveGroup): string {
+  return `<section class="theme-post" id="${escapeHtmlAttr(group.anchor)}">
+  <p class="theme-card-label">Archive</p>
+  <h2 class="theme-card-title">${escapeHtml(group.label)}</h2>
+  <div class="theme-archive-posts">${group.posts.map(renderArchivePost).join("")}</div>
+</section>`;
+}
+
+function renderArchivePost(post: Post): string {
+  return `<article class="theme-archive-post" id="theme-archive-${escapeHtmlAttr(post.slug)}">
+  <a href="${escapeHtmlAttr(post.url)}">${escapeHtml(post.title)}</a>
+  <span class="theme-meta">${post.date ? escapeHtml(formatDate(post.date)) : ""}</span>
+</article>`;
+}
+
+function renderPagination(pagination: PaginationInfo): string {
+  if (pagination.totalPages <= 1) {
+    return "";
+  }
+
+  return `<nav class="theme-pagination" aria-label="Pagination">
+  ${pagination.prevUrl ? `<a class="theme-page-link" href="${escapeHtmlAttr(pagination.prevUrl)}">Previous</a>` : ""}
+  ${pagination.links
+    .map((link) =>
+      link.current
+        ? `<span class="theme-page-current" aria-current="page">${link.number}</span>`
+        : `<a class="theme-page-link" href="${escapeHtmlAttr(link.url)}">${link.number}</a>`,
+    )
+    .join("")}
+  ${pagination.nextUrl ? `<a class="theme-page-link" href="${escapeHtmlAttr(pagination.nextUrl)}">Next</a>` : ""}
+</nav>`;
 }
 
 export default theme;

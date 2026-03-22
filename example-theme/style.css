@@ -55,6 +55,7 @@ a { color: inherit; }
 }
 
 .theme-site-description,
+.theme-nav,
 .theme-intro,
 .theme-meta,
 .theme-card-summary,
@@ -98,10 +99,28 @@ a { color: inherit; }
   margin-top: 1rem;
 }
 
+.theme-archive-list,
+.theme-archive-posts {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .theme-card,
 .theme-post {
   padding: 1.25rem;
   border-radius: 1.2rem;
+}
+
+.theme-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.theme-nav a,
+.theme-archive-post a {
+  text-decoration: none;
 }
 
 .theme-card-title {
@@ -201,6 +220,33 @@ a { color: inherit; }
   border: 0;
   height: 1px;
   background: var(--border);
+}
+
+.theme-archive-post {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.theme-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.theme-page-link,
+.theme-page-current {
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-decoration: none;
+}
+
+.theme-page-current {
+  background: rgba(194, 71, 45, 0.12);
+  color: var(--accent);
 }
 
 @media (max-width: 720px) {
