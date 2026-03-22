@@ -1,0 +1,3 @@
+title: Example Blog
+description: Example content wired to a separate theme module and stylesheet.
+theme: ../example-theme
