@@ -6,7 +6,7 @@ import { buildArchives, buildTagPages, buildTagSummaries } from "./site-data.ts"
 import { publishThemeAssets, resolveTheme } from "./theme-loader.ts";
 import { cleanDir, ensureDir } from "./utils.ts";
 
-const DEFAULT_BLOG_FOLDER = "example-blog";
+const DEFAULT_BLOG_FOLDER = "examples/blog";
 const CONTENT_ROOT = join("content", "posts");
 const OUTPUT_ROOT = "public";
 

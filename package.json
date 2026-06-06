@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "bun run src/build.ts",
-    "check": "bun run src/build.ts example-blog",
+    "check": "bun run src/build.ts examples/blog",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "typecheck": "tsc --noEmit"

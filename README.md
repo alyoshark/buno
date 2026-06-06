@@ -10,7 +10,7 @@ A very small static blog engine built on Bun's markdown API.
 - Loads a theme module that controls stylesheets, layouts, and markdown element rendering
 - Preserves heading IDs for anchorable sections and CSS targeting
 - Builds home, post, tags, tag-detail, and archives pages into `/<blogfolder>/public`
-- Supports a separate reusable theme folder, demonstrated by `example-theme/`
+- Supports a separate reusable theme folder, demonstrated by `examples/theme/`
 
 ## Usage
 
@@ -18,7 +18,7 @@ A very small static blog engine built on Bun's markdown API.
 bun run build -- my-blog
 ```
 
-If you omit the folder, the builder uses `example-blog`.
+If you omit the folder, the builder uses `examples/blog`.
 
 ## Tooling
 
@@ -38,7 +38,7 @@ Themes are plain TypeScript modules that export a theme object from `theme.ts`.
 - `renderIndex`: renders the home page body
 - `renderPost`: renders each post body
 
-See [example-theme/theme.ts](/Users/chenhong.xie/work/buno/example-theme/theme.ts) and [src/theme-api.ts](/Users/chenhong.xie/work/buno/src/theme-api.ts) for the contract.
+See [examples/theme/theme.ts](/Users/chenhong.xie/work/buno/examples/theme/theme.ts) and [src/theme-api.ts](/Users/chenhong.xie/work/buno/src/theme-api.ts) for the contract.
 
 The build pipeline is intentionally split across small modules now:
 
@@ -77,7 +77,7 @@ my-blog/
 Point `blog.config.yaml` at a reusable theme directory:
 
 ```yaml
-theme: ../example-theme
+theme: ../theme
 ```
 
 Pagination is configured in the same file:

@@ -11,5 +11,5 @@
     "noUncheckedIndexedAccess": true,
     "types": ["bun-types"]
   },
-  "include": ["src/**/*.ts", "example-theme/**/*.ts"]
+  "include": ["src/**/*.ts", "examples/**/*.ts"]
 }
