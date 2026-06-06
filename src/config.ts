@@ -1,5 +1,5 @@
 import { join, relative } from "node:path";
-import type { BlogConfig, SiteMetadata } from "./theme-api.ts";
+import type { BlogConfig, ImageConfig, SiteMetadata } from "./theme-api.ts";
 import { humanizeSlug } from "./utils.ts";
 
 const DEFAULT_CONFIG_FILE = "blog.config.yaml";
@@ -34,4 +34,13 @@ export function resolvePageSize(config: BlogConfig): number {
   }
 
   return Math.floor(candidate);
+}
+
+export function resolveImageConfig(config: BlogConfig): ImageConfig {
+  return {
+    enabled: config.images?.enabled ?? false,
+    max_width: config.images?.max_width ?? 1200,
+    quality: config.images?.quality ?? 82,
+    placeholder: config.images?.placeholder ?? true,
+  };
 }

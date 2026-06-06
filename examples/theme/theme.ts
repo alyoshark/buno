@@ -1,4 +1,4 @@
-import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "../src/theme-api.ts";
+import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, getProcessedImage, renderResponsiveImage, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "../../src/theme-api.ts";
 
 const theme = defineTheme({
   name: "example-theme",
@@ -41,7 +41,15 @@ const theme = defineTheme({
     strong: (children) => `<strong class="theme-strong">${children}</strong>`,
     emphasis: (children) => `<em class="theme-emphasis">${children}</em>`,
     link: (children, meta) => `<a class="theme-link" href="${escapeHtmlAttr(meta?.href ?? "#")}">${children}</a>`,
-    image: (_children, meta) => `<figure class="theme-figure"><img class="theme-image" src="${escapeHtmlAttr(meta?.src ?? "")}" alt="" /></figure>`,
+    image: (children, meta) => {
+      const src = meta?.src ?? "";
+      const alt = children ?? "";
+      const processed = getProcessedImage(src);
+      if (processed) {
+        return `<figure class="theme-figure">${renderResponsiveImage(src, alt, processed)}</figure>`;
+      }
+      return `<figure class="theme-figure"><img class="theme-image" src="${escapeHtmlAttr(src)}" alt="${escapeHtmlAttr(alt)}" loading="lazy" /></figure>`;
+    },
     codespan: (children) => `<code class="theme-inline-code">${children}</code>`,
     strikethrough: (children) => `<del class="theme-strike">${children}</del>`,
     // text: (children) => children,

@@ -1,4 +1,4 @@
-import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "./theme-api.ts";
+import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, getProcessedImage, renderResponsiveImage, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "./theme-api.ts";
 
 const DEFAULT_THEME_CSS = `
 :root {
@@ -237,10 +237,14 @@ const theme = defineTheme({
       const target = external ? ` target="_blank"` : "";
       return `<a class="content-link" href="${href}"${title}${rel}${target}>${children}</a>`;
     },
-    image: (_children, meta) => {
-      const src = escapeHtmlAttr(meta?.src ?? "");
-      const title = meta?.title ? ` title="${escapeHtmlAttr(meta.title)}"` : "";
-      return `<img class="content-image" src="${src}" alt=""${title} />`;
+    image: (children, meta) => {
+      const src = meta?.src ?? "";
+      const alt = children ?? "";
+      const processed = getProcessedImage(src);
+      if (processed) {
+        return renderResponsiveImage(src, alt, processed);
+      }
+      return `<img class="content-image" src="${escapeHtmlAttr(src)}" alt="${escapeHtmlAttr(alt)}" loading="lazy" />`;
     },
     codespan: (children) => `<code class="content-inline-code">${children}</code>`,
     strikethrough: (children) => `<del class="content-strikethrough">${children}</del>`,

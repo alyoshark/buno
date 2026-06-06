@@ -19,6 +19,13 @@ export type SiteMetadata = {
   description: string;
 };
 
+export type ImageConfig = {
+  enabled?: boolean;
+  max_width?: number;
+  quality?: number;
+  placeholder?: boolean;
+};
+
 export type BlogConfig = {
   title?: string;
   description?: string;
@@ -29,6 +36,7 @@ export type BlogConfig = {
     pageSize?: number;
     page_size?: number;
   };
+  images?: ImageConfig;
 };
 
 export type TagSummary = {
@@ -145,6 +153,9 @@ export function escapeHtml(value: string): string {
 export function escapeHtmlAttr(value: string): string {
   return escapeHtml(value);
 }
+
+export type { ProcessedImage } from "./images.ts";
+export { getProcessedImage, renderResponsiveImage } from "./images.ts";
 
 export function formatDate(date: string): string {
   const parsed = new Date(date);

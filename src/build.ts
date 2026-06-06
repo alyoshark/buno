@@ -1,19 +1,22 @@
 import { dirname, join, relative, resolve } from "node:path";
-import { buildSiteMetadata, loadBlogConfig, resolvePageSize } from "./config.ts";
+import { buildSiteMetadata, loadBlogConfig, resolveImageConfig, resolvePageSize } from "./config.ts";
 import { loadPosts } from "./content.ts";
 import { paginateItems } from "./pagination.ts";
 import { buildArchives, buildTagPages, buildTagSummaries } from "./site-data.ts";
 import { publishThemeAssets, resolveTheme } from "./theme-loader.ts";
+import { processContentImages } from "./images.ts";
 import { cleanDir, ensureDir } from "./utils.ts";
 
 const DEFAULT_BLOG_FOLDER = "examples/blog";
 const CONTENT_ROOT = join("content", "posts");
+const CONTENT_ASSETS_ROOT = "content";
 const OUTPUT_ROOT = "public";
 
 async function main() {
   const blogFolderArg = process.argv[2] ?? DEFAULT_BLOG_FOLDER;
   const blogRoot = resolve(process.cwd(), blogFolderArg);
   const contentDir = join(blogRoot, CONTENT_ROOT);
+  const contentRoot = join(blogRoot, CONTENT_ASSETS_ROOT);
   const outputDir = join(blogRoot, OUTPUT_ROOT);
 
   await ensureDir(contentDir);
@@ -28,6 +31,7 @@ async function main() {
   const site = buildSiteMetadata(blogFolderArg, blogRoot, config);
   const themeResolution = await resolveTheme(blogRoot, config.theme);
   const stylesheets = await publishThemeAssets(themeResolution.themeDir, outputDir, themeResolution.theme.stylesheets ?? []);
+  await processContentImages(contentRoot, outputDir, resolveImageConfig(config));
 
   await Promise.all(
     paginateItems(posts, pageSize, "/").map((page) =>

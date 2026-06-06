@@ -11,6 +11,7 @@ A very small static blog engine built on Bun's markdown API.
 - Preserves heading IDs for anchorable sections and CSS targeting
 - Builds home, post, tags, tag-detail, and archives pages into `/<blogfolder>/public`
 - Supports a separate reusable theme folder, demonstrated by `examples/theme/`
+- Optimizes images with Bun.Image: WebP conversion, resizing, blur placeholders
 
 ## Usage
 
@@ -78,6 +79,16 @@ Point `blog.config.yaml` at a reusable theme directory:
 
 ```yaml
 theme: ../theme
+```
+
+Image processing is configured via `images` in `blog.config.yaml`:
+
+```yaml
+images:
+  enabled: true
+  max_width: 1200
+  quality: 82
+  placeholder: true
 ```
 
 Pagination is configured in the same file:
