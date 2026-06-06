@@ -24,6 +24,7 @@ type Attrs = {
   enterKeyHint?: string;
   inputMode?: string;
   is?: string;
+  lang?: string;
   itemID?: string;
   itemRef?: string;
   itemScope?: boolean;
