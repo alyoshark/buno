@@ -1,4 +1,7 @@
-import { defineTheme, escapeHtml, escapeHtmlAttr, formatDate, getProcessedImage, renderResponsiveImage, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "./theme-api.ts";
+/** @jsx jsx */
+/** @jsxFrag Fragment */
+import { jsx, Fragment, raw } from "./jsx/jsx-runtime.ts";
+import { defineTheme, escapeHtmlAttr, formatDate, getProcessedImage, renderResponsiveImage, type ArchiveGroup, type PaginationInfo, type Post, type TagSummary } from "./theme-api.ts";
 
 const DEFAULT_THEME_CSS = `
 :root {
@@ -221,12 +224,8 @@ const theme = defineTheme({
     },
     hr: () => `<hr class="content-hr" />`,
     table: (children) => `<div class="content-table-wrap"><table class="content-table">${children}</table></div>`,
-    // thead: (children) => `<thead>${children}</thead>`,
-    // tbody: (children) => `<tbody>${children}</tbody>`,
-    // tr: (children) => `<tr>${children}</tr>`,
     th: (children, meta) => `<th${alignAttr(meta?.align)}>${children}</th>`,
     td: (children, meta) => `<td${alignAttr(meta?.align)}>${children}</td>`,
-    // html: (children) => children,
     strong: (children) => `<strong class="content-strong">${children}</strong>`,
     emphasis: (children) => `<em class="content-emphasis">${children}</em>`,
     link: (children, meta) => {
@@ -248,151 +247,164 @@ const theme = defineTheme({
     },
     codespan: (children) => `<code class="content-inline-code">${children}</code>`,
     strikethrough: (children) => `<del class="content-strikethrough">${children}</del>`,
-    // text: (children) => children,
   },
-  renderDocument: ({ site, pageTitle, pageId, bodyClass, stylesheets, content }) => `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(pageTitle)}</title>
-    ${stylesheets.map((href) => `<link rel="stylesheet" href="${escapeHtmlAttr(href)}" />`).join("\n    ")}
-    ${site.url ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtmlAttr(site.title)}" href="${escapeHtmlAttr(site.url.replace(/\/$/, "") + "/feed.xml")}" />` : ""}
-  </head>
-  <body id="${escapeHtmlAttr(pageId)}" class="${escapeHtmlAttr(bodyClass)}">
-    <div class="site-shell" id="site-shell">
-      <header class="site-header" id="site-header">
-        <a class="site-home-link" href="/">${escapeHtml(site.title)}</a>
-        <nav class="site-nav" aria-label="Primary">
-          <a href="/">Home</a>
-          <a href="/tags/">Tags</a>
-          <a href="/archives/">Archives</a>
-        </nav>
+  renderDocument: ({ site, pageTitle, pageId, bodyClass, stylesheets, content }) =>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{pageTitle}</title>
+        {stylesheets.map((href) => <link rel="stylesheet" href={href} />)}
+        {site.url ? <link rel="alternate" type="application/rss+xml" title={site.title} href={`${site.url.replace(/\/$/, "")}/feed.xml`} /> : null}
+      </head>
+      <body id={pageId} className={bodyClass}>
+        <div className="site-shell" id="site-shell">
+          <header className="site-header" id="site-header">
+            <a className="site-home-link" href="/">{site.title}</a>
+            <nav className="site-nav" aria-label="Primary">
+              <a href="/">Home</a>
+              <a href="/tags/">Tags</a>
+              <a href="/archives/">Archives</a>
+            </nav>
+          </header>
+          <p className="site-tagline">{site.description}</p>
+          <main id="site-main">{raw(content)}</main>
+        </div>
+      </body>
+    </html>,
+  renderIndex: ({ site, posts, pagination }) =>
+    <section className="page-card">
+      <header className="page-header">
+        <h1 className="post-title">{site.title}</h1>
+        <p className="site-tagline">{site.description}</p>
       </header>
-      <p class="site-tagline">${escapeHtml(site.description)}</p>
-      <main id="site-main">
-        ${content}
-      </main>
-    </div>
-  </body>
-</html>`,
-  renderIndex: ({ site, posts, pagination }) => `
-<section class="page-card">
-  <header class="page-header">
-    <h1 class="post-title">${escapeHtml(site.title)}</h1>
-    <p class="site-tagline">${escapeHtml(site.description)}</p>
-  </header>
-  <section class="post-list">${posts.length > 0 ? posts.map(renderPostPreview).join("\n") : `<p class="empty-state">No posts found yet.</p>`}</section>
-  ${renderPagination(pagination)}
-</section>`,
-  renderPost: ({ post }) => `
-<article class="page-card post-page" id="${post.id}">
-  <header class="post-header">
-    <p class="page-meta"><a href="/">Back to home</a></p>
-    <h1 class="post-title">${escapeHtml(post.title)}</h1>
-    <div class="post-meta">
-      ${post.date ? `<time datetime="${escapeHtmlAttr(post.date)}">${escapeHtml(formatDate(post.date))}</time>` : ""}
-      <span>${escapeHtml(post.relativeSourcePath)}</span>
-    </div>
-    ${renderTagList(post.tags)}
-  </header>
-  <section class="content" id="content-${escapeHtmlAttr(post.slug)}">
-    ${theme.renderMarkdown(post.body)}
-  </section>
-</article>`,
-  renderTagsIndex: ({ site, tags, pagination }) => `
-<section class="page-card section-stack">
-  <header class="page-header">
-    <p class="page-meta"><a href="/">Back to home</a></p>
-    <h1 class="post-title">Tags</h1>
-    <p class="site-tagline">${escapeHtml(site.title)} has ${pagination.totalItems} tag${pagination.totalItems === 1 ? "" : "s"}.</p>
-  </header>
-  <section class="taxonomy-list">${tags.length > 0 ? tags.map(renderTagSummary).join("\n") : `<p class="empty-state">No tags found yet.</p>`}</section>
-  ${renderPagination(pagination)}
-</section>`,
-  renderTag: ({ tag, pagination }) => `
-<section class="page-card section-stack" id="tag-${escapeHtmlAttr(tag.slug)}">
-  <header class="page-header">
-    <p class="page-meta"><a href="/tags/">Back to tags</a></p>
-    <h1 class="post-title">${escapeHtml(tag.name)}</h1>
-    <p class="site-tagline">${tag.count} post${tag.count === 1 ? "" : "s"} in this tag.</p>
-  </header>
-  <section class="post-list">${tag.posts.map(renderPostPreview).join("\n")}</section>
-  ${renderPagination(pagination)}
-</section>`,
-  renderArchives: ({ archives, pagination }) => `
-<section class="page-card section-stack">
-  <header class="page-header">
-    <p class="page-meta"><a href="/">Back to home</a></p>
-    <h1 class="post-title">Archives</h1>
-    <p class="site-tagline">Posts grouped by month.</p>
-  </header>
-  <section class="archive-list">${archives.length > 0 ? archives.map(renderArchiveGroup).join("\n") : `<p class="empty-state">No dated posts found yet.</p>`}</section>
-  ${renderPagination(pagination)}
-</section>`,
+      <section className="post-list">
+        {posts.length > 0 ? posts.map((p) => <PostPreview post={p} />) : <p className="empty-state">No posts found yet.</p>}
+      </section>
+      {pagination.totalPages > 1 ? <Pagination info={pagination} /> : null}
+    </section>,
+  renderPost: ({ post }) =>
+    <article className="page-card post-page" id={post.id}>
+      <header className="post-header">
+        <p className="page-meta"><a href="/">Back to home</a></p>
+        <h1 className="post-title">{post.title}</h1>
+        <div className="post-meta">
+          {post.date ? <time dateTime={post.date}>{formatDate(post.date)}</time> : null}
+          <span>{post.relativeSourcePath}</span>
+        </div>
+        {post.tags.length > 0 ? <TagList tags={post.tags} /> : null}
+      </header>
+      <section className="content" id={`content-${post.slug}`}>{raw(theme.renderMarkdown(post.body))}</section>
+    </article>,
+  renderTagsIndex: ({ site, tags, pagination }) =>
+    <section className="page-card section-stack">
+      <header className="page-header">
+        <p className="page-meta"><a href="/">Back to home</a></p>
+        <h1 className="post-title">Tags</h1>
+        <p className="site-tagline">{site.title} has {pagination.totalItems} tag{pagination.totalItems === 1 ? "" : "s"}.</p>
+      </header>
+      <section className="taxonomy-list">
+        {tags.length > 0 ? tags.map((t) => <TagSummaryCard tag={t} />) : <p className="empty-state">No tags found yet.</p>}
+      </section>
+      {pagination.totalPages > 1 ? <Pagination info={pagination} /> : null}
+    </section>,
+  renderTag: ({ tag, pagination }) =>
+    <section className="page-card section-stack" id={`tag-${tag.slug}`}>
+      <header className="page-header">
+        <p className="page-meta"><a href="/tags/">Back to tags</a></p>
+        <h1 className="post-title">{tag.name}</h1>
+        <p className="site-tagline">{tag.count} post{tag.count === 1 ? "" : "s"} in this tag.</p>
+      </header>
+      <section className="post-list">
+        {tag.posts.map((p) => <PostPreview post={p} />)}
+      </section>
+      {pagination.totalPages > 1 ? <Pagination info={pagination} /> : null}
+    </section>,
+  renderArchives: ({ archives, pagination }) =>
+    <section className="page-card section-stack">
+      <header className="page-header">
+        <p className="page-meta"><a href="/">Back to home</a></p>
+        <h1 className="post-title">Archives</h1>
+        <p className="site-tagline">Posts grouped by month.</p>
+      </header>
+      <section className="archive-list">
+        {archives.length > 0 ? archives.map((g) => <ArchiveGroup group={g} />) : <p className="empty-state">No dated posts found yet.</p>}
+      </section>
+      {pagination.totalPages > 1 ? <Pagination info={pagination} /> : null}
+    </section>,
 });
 
 export default theme;
 
-function renderPostPreview(post: Post): string {
-  return `<article class="post-preview" id="${escapeHtmlAttr(post.id)}">
-  <header>
-    <h2 class="post-preview-title"><a class="post-preview-link" href="${escapeHtmlAttr(post.url)}">${escapeHtml(post.title)}</a></h2>
-    <div class="post-meta">
-      ${post.date ? `<time datetime="${escapeHtmlAttr(post.date)}">${escapeHtml(formatDate(post.date))}</time>` : ""}
-      <span>${escapeHtml(post.relativeSourcePath)}</span>
-    </div>
-  </header>
-  ${post.summary ? `<p class="post-summary">${escapeHtml(post.summary)}</p>` : ""}
-  ${renderTagList(post.tags)}
-</article>`;
+function PostPreview({ post }: { post: Post }) {
+  return (
+    <article className="post-preview" id={post.id}>
+      <header>
+        <h2 className="post-preview-title"><a className="post-preview-link" href={post.url}>{post.title}</a></h2>
+        <div className="post-meta">
+          {post.date ? <time dateTime={post.date}>{formatDate(post.date)}</time> : null}
+          <span>{post.relativeSourcePath}</span>
+        </div>
+      </header>
+      {post.summary ? <p className="post-summary">{post.summary}</p> : null}
+      {post.tags.length > 0 ? <TagList tags={post.tags} /> : null}
+    </article>
+  );
 }
 
-function renderTagList(tags: string[]): string {
-  if (tags.length === 0) {
-    return "";
-  }
+function TagList({ tags }: { tags: string[] }) {
+  if (tags.length === 0) return null;
 
-  return `<ul class="tag-list">${tags.map((tag) => `<li class="tag">${escapeHtml(tag)}</li>`).join("")}</ul>`;
+  return (
+    <ul className="tag-list">
+      {tags.map((tag) => <li className="tag">{tag}</li>)}
+    </ul>
+  );
 }
 
-function renderTagSummary(tag: TagSummary): string {
-  return `<article class="taxonomy-card" id="tag-summary-${escapeHtmlAttr(tag.slug)}">
-  <h2><a class="taxonomy-link" href="${escapeHtmlAttr(tag.url)}">${escapeHtml(tag.name)}</a></h2>
-  <p class="page-meta">${tag.count} post${tag.count === 1 ? "" : "s"}</p>
-</article>`;
+function TagSummaryCard({ tag }: { tag: TagSummary }) {
+  return (
+    <article className="taxonomy-card" id={`tag-summary-${tag.slug}`}>
+      <h2><a className="taxonomy-link" href={tag.url}>{tag.name}</a></h2>
+      <p className="page-meta">{tag.count} post{tag.count === 1 ? "" : "s"}</p>
+    </article>
+  );
 }
 
-function renderArchiveGroup(group: ArchiveGroup): string {
-  return `<section class="archive-group" id="${escapeHtmlAttr(group.anchor)}">
-  <h2 class="post-preview-title">${escapeHtml(group.label)}</h2>
-  <div class="archive-posts">${group.posts.map(renderArchivePost).join("")}</div>
-</section>`;
+function ArchiveGroup({ group }: { group: ArchiveGroup }) {
+  return (
+    <section className="archive-group" id={group.anchor}>
+      <h2 className="post-preview-title">{group.label}</h2>
+      <div className="archive-posts">
+        {group.posts.map((post) => <ArchivePost post={post} />)}
+      </div>
+    </section>
+  );
 }
 
-function renderArchivePost(post: Post): string {
-  return `<article class="archive-post" id="archive-post-${escapeHtmlAttr(post.slug)}">
-  <a href="${escapeHtmlAttr(post.url)}">${escapeHtml(post.title)}</a>
-  <span class="page-meta">${post.date ? escapeHtml(formatDate(post.date)) : ""}</span>
-</article>`;
+function ArchivePost({ post }: { post: Post }) {
+  return (
+    <article className="archive-post" id={`archive-post-${post.slug}`}>
+      <a href={post.url}>{post.title}</a>
+      <span className="page-meta">{post.date ? formatDate(post.date) : ""}</span>
+    </article>
+  );
 }
 
-function renderPagination(pagination: PaginationInfo): string {
-  if (pagination.totalPages <= 1) {
-    return "";
-  }
+function Pagination({ info }: { info: PaginationInfo }) {
+  if (info.totalPages <= 1) return null;
 
-  return `<nav class="pagination" aria-label="Pagination">
-  ${pagination.prevUrl ? `<a class="pagination-link" href="${escapeHtmlAttr(pagination.prevUrl)}">Previous</a>` : ""}
-  ${pagination.links
-    .map((link) =>
-      link.current
-        ? `<span class="pagination-current" aria-current="page">${link.number}</span>`
-        : `<a class="pagination-link" href="${escapeHtmlAttr(link.url)}">${link.number}</a>`,
-    )
-    .join("")}
-  ${pagination.nextUrl ? `<a class="pagination-link" href="${escapeHtmlAttr(pagination.nextUrl)}">Next</a>` : ""}
-</nav>`;
+  return (
+    <nav className="pagination" aria-label="Pagination">
+      {info.prevUrl ? <a className="pagination-link" href={info.prevUrl}>Previous</a> : null}
+      {info.links.map((link) =>
+        link.current
+          ? <span className="pagination-current" aria-current="page">{link.number}</span>
+          : <a className="pagination-link" href={link.url}>{link.number}</a>,
+      )}
+      {info.nextUrl ? <a className="pagination-link" href={info.nextUrl}>Next</a> : null}
+    </nav>
+  );
 }
 
 function alignAttr(align?: string): string {

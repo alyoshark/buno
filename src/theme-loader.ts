@@ -1,6 +1,6 @@
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import defaultTheme from "./default-theme.ts";
+import defaultTheme from "./default-theme.tsx";
 import type { Theme, ThemeAsset } from "./theme-api.ts";
 import { ensureDir } from "./utils.ts";
 

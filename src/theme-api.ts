@@ -163,6 +163,10 @@ function wrapRenderers(renderers: MarkdownRenderers): MarkdownRenderers {
   return wrapped as MarkdownRenderers;
 }
 
+function wrapRenderFn<T extends (...args: any[]) => unknown>(fn: T): T {
+  return ((...args: any[]) => toString(fn(...args))) as T;
+}
+
 export function defineTheme(theme: Omit<Theme, "renderMarkdown"> & { renderMarkdown?: Theme["renderMarkdown"] }): Theme {
   const markdownOptions = theme.markdownOptions;
   const renderers = wrapRenderers(theme.renderers);
@@ -171,6 +175,12 @@ export function defineTheme(theme: Omit<Theme, "renderMarkdown"> & { renderMarkd
     ...theme,
     renderers,
     renderMarkdown,
+    renderDocument: wrapRenderFn(theme.renderDocument),
+    renderIndex: wrapRenderFn(theme.renderIndex),
+    renderPost: wrapRenderFn(theme.renderPost),
+    renderTagsIndex: wrapRenderFn(theme.renderTagsIndex),
+    renderTag: wrapRenderFn(theme.renderTag),
+    renderArchives: wrapRenderFn(theme.renderArchives),
   };
 }
 
