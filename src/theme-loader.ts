@@ -6,7 +6,10 @@ import { ensureDir } from "./utils.ts";
 
 export async function resolveTheme(blogRoot: string, configuredThemePath?: string): Promise<{ theme: Theme; themeDir?: string }> {
   const candidateDir = configuredThemePath ? resolve(blogRoot, configuredThemePath) : join(blogRoot, "theme");
-  const themeFilePath = join(candidateDir, "theme.ts");
+  const tsxFilePath = join(candidateDir, "theme.tsx");
+  const tsFilePath = join(candidateDir, "theme.ts");
+  const tsxFile = Bun.file(tsxFilePath);
+  const themeFilePath = (await tsxFile.exists()) ? tsxFilePath : tsFilePath;
   const themeFile = Bun.file(themeFilePath);
 
   if (!(await themeFile.exists())) {

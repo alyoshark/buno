@@ -14,6 +14,7 @@ A very small static blog engine built on Bun's markdown API.
 - Optimizes images with Bun.Image: WebP conversion, resizing, blur placeholders
 - Generates RSS feed (feed.xml) and sitemap (sitemap.xml) when site.url is configured
 - Dev server with live reload: auto-rebuilds on content or theme changes
+- Built-in JSX runtime for theme development (no external dependencies)
 
 ## Usage
 
@@ -43,6 +44,20 @@ Themes are plain TypeScript modules that export a theme object from `theme.ts`.
 
 See [examples/theme/theme.ts](/Users/chenhong.xie/work/buno/examples/theme/theme.ts) and [src/theme-api.ts](/Users/chenhong.xie/work/buno/src/theme-api.ts) for the contract.
 
+Theme files can use JSX with `theme.tsx` — a built-in runtime converts JSX to
+HTML strings. Use the `/** @jsx jsx */` pragma at the top of your file:
+
+```tsx
+/** @jsx jsx */
+/** @jsxFrag Fragment */
+import { jsx, Fragment } from "../src/jsx/jsx-runtime.ts";
+
+export const Hello = () => <p>Hello from JSX!</p>;
+```
+
+The `defineTheme` wrapper automatically converts JSXNode returns to strings
+for all render functions and markdown renderers.
+
 The build pipeline is intentionally split across small modules now:
 
 - [src/build.ts](/Users/chenhong.xie/work/buno/src/build.ts) orchestrates page generation
@@ -50,6 +65,7 @@ The build pipeline is intentionally split across small modules now:
 - [src/site-data.ts](/Users/chenhong.xie/work/buno/src/site-data.ts) builds tags and archives
 - [src/pagination.ts](/Users/chenhong.xie/work/buno/src/pagination.ts) slices list pages and generates pager metadata
 - [src/theme-loader.ts](/Users/chenhong.xie/work/buno/src/theme-loader.ts) resolves themes and publishes assets
+- [src/jsx/jsx-runtime.ts](/Users/chenhong.xie/work/buno/src/jsx/jsx-runtime.ts) JSX-to-string runtime for .tsx theme files
 
 ## Front matter
 

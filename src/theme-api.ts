@@ -143,9 +143,35 @@ export type Theme = {
   renderArchives: (args: ThemeRenderArchivesArgs) => string;
 };
 
+function toString(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "html" in value) {
+    return (value as { html: string }).html;
+  }
+  return String(value);
+}
+
+function wrapFn<T extends (...args: any[]) => unknown>(fn: T): T {
+  return ((...args: any[]) => toString(fn(...args))) as T;
+}
+
+function wrapRenderers(renderers: MarkdownRenderers): MarkdownRenderers {
+  const wrapped: Record<string, unknown> = {};
+  for (const [key, fn] of Object.entries(renderers)) {
+    wrapped[key] = typeof fn === "function" ? wrapFn(fn) : fn;
+  }
+  return wrapped as MarkdownRenderers;
+}
+
 export function defineTheme(theme: Omit<Theme, "renderMarkdown"> & { renderMarkdown?: Theme["renderMarkdown"] }): Theme {
-  const renderMarkdown = theme.renderMarkdown ?? ((markdown: string) => Bun.markdown.render(markdown, theme.renderers, theme.markdownOptions));
-  return { ...theme, renderMarkdown };
+  const markdownOptions = theme.markdownOptions;
+  const renderers = wrapRenderers(theme.renderers);
+  const renderMarkdown = theme.renderMarkdown ?? ((markdown: string) => Bun.markdown.render(markdown, renderers, markdownOptions));
+  return {
+    ...theme,
+    renderers,
+    renderMarkdown,
+  };
 }
 
 export function escapeHtml(value: string): string {
