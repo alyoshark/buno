@@ -17,6 +17,7 @@ export type Post = {
 export type SiteMetadata = {
   title: string;
   description: string;
+  url?: string;
 };
 
 export type ImageConfig = {
@@ -29,6 +30,7 @@ export type ImageConfig = {
 export type BlogConfig = {
   title?: string;
   description?: string;
+  url?: string;
   theme?: string;
   pageSize?: number;
   page_size?: number;

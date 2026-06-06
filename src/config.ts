@@ -24,6 +24,7 @@ export function buildSiteMetadata(blogFolderArg: string, blogRoot: string, confi
   return {
     title: config.title ?? humanizeSlug(blogFolderArg),
     description: config.description ?? `Posts loaded from ${relative(process.cwd(), join(blogRoot, CONTENT_ROOT)) || CONTENT_ROOT}`,
+    url: config.url,
   };
 }
 

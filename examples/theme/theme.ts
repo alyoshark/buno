@@ -61,6 +61,7 @@ const theme = defineTheme({
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(pageTitle)}</title>
     ${stylesheets.map((href) => `<link rel="stylesheet" href="${escapeHtmlAttr(href)}" />`).join("\n    ")}
+    ${site.url ? `<link rel="alternate" type="application/rss+xml" title="${escapeHtmlAttr(site.title)}" href="${escapeHtmlAttr(site.url.replace(/\/$/, "") + "/feed.xml")}" />` : ""}
   </head>
   <body id="${escapeHtmlAttr(pageId)}" class="${escapeHtmlAttr(bodyClass)}">
     <div class="theme-frame">

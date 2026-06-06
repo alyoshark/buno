@@ -1,7 +1,9 @@
 import { dirname, join, relative, resolve } from "node:path";
 import { buildSiteMetadata, loadBlogConfig, resolveImageConfig, resolvePageSize } from "./config.ts";
 import { loadPosts } from "./content.ts";
+import { generateRssFeed } from "./feed.ts";
 import { paginateItems } from "./pagination.ts";
+import { generateSitemap } from "./sitemap.ts";
 import { buildArchives, buildTagPages, buildTagSummaries } from "./site-data.ts";
 import { publishThemeAssets, resolveTheme } from "./theme-loader.ts";
 import { processContentImages } from "./images.ts";
@@ -32,6 +34,29 @@ async function main() {
   const themeResolution = await resolveTheme(blogRoot, config.theme);
   const stylesheets = await publishThemeAssets(themeResolution.themeDir, outputDir, themeResolution.theme.stylesheets ?? []);
   await processContentImages(contentRoot, outputDir, resolveImageConfig(config));
+
+  const totalPages = Math.max(1, Math.ceil(posts.length / pageSize));
+  const totalTagPages = Math.max(1, Math.ceil(tagSummaries.length / pageSize));
+  const totalArchivePages = Math.max(1, Math.ceil(archives.length / pageSize));
+  const sitemapPages: string[] = ["/"];
+
+  for (let i = 2; i <= totalPages; i++) sitemapPages.push(`/page/${i}/`);
+  sitemapPages.push("/tags/");
+  for (let i = 2; i <= totalTagPages; i++) sitemapPages.push(`/tags/page/${i}/`);
+  sitemapPages.push("/archives/");
+  for (let i = 2; i <= totalArchivePages; i++) sitemapPages.push(`/archives/page/${i}/`);
+
+  for (const post of posts) sitemapPages.push(post.url);
+  for (const tag of tags) {
+    sitemapPages.push(tag.url);
+    const tagPostPages = Math.max(1, Math.ceil(tag.posts.length / pageSize));
+    for (let i = 2; i <= tagPostPages; i++) sitemapPages.push(`/tags/${tag.slug}/page/${i}/`);
+  }
+
+  if (site.url) {
+    await writePage(join(outputDir, "feed.xml"), generateRssFeed(posts, site.title, site.description, site.url));
+    await writePage(join(outputDir, "sitemap.xml"), generateSitemap(sitemapPages, site.url));
+  }
 
   await Promise.all(
     paginateItems(posts, pageSize, "/").map((page) =>
@@ -121,7 +146,7 @@ async function main() {
   );
 
   console.log(
-    `Built ${posts.length} post(s), ${tags.length} tag page(s), and ${archives.length} archive group(s) into ${relative(process.cwd(), outputDir) || "."} using theme "${themeResolution.theme.name}"`,
+    `Built ${posts.length} post(s), ${tags.length} tag page(s), ${archives.length} archive group(s), sitemap, and feed into ${relative(process.cwd(), outputDir) || "."} using theme "${themeResolution.theme.name}"`,
   );
 }
 
