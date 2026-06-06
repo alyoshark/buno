@@ -13,6 +13,7 @@ A very small static blog engine built on Bun's markdown API.
 - Supports a separate reusable theme folder, demonstrated by `examples/theme/`
 - Optimizes images with Bun.Image: WebP conversion, resizing, blur placeholders
 - Generates RSS feed (feed.xml) and sitemap (sitemap.xml) when site.url is configured
+- Dev server with live reload: auto-rebuilds on content or theme changes
 
 ## Usage
 

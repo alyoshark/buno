@@ -20,6 +20,10 @@ export type SiteMetadata = {
   url?: string;
 };
 
+export type ServeConfig = {
+  port?: number;
+};
+
 export type ImageConfig = {
   enabled?: boolean;
   max_width?: number;
@@ -39,6 +43,7 @@ export type BlogConfig = {
     page_size?: number;
   };
   images?: ImageConfig;
+  serve?: ServeConfig;
 };
 
 export type TagSummary = {

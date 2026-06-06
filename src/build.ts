@@ -14,9 +14,9 @@ const CONTENT_ROOT = join("content", "posts");
 const CONTENT_ASSETS_ROOT = "content";
 const OUTPUT_ROOT = "public";
 
-async function main() {
-  const blogFolderArg = process.argv[2] ?? DEFAULT_BLOG_FOLDER;
-  const blogRoot = resolve(process.cwd(), blogFolderArg);
+export async function main(blogFolderArg?: string) {
+  const blogFolder = blogFolderArg ?? DEFAULT_BLOG_FOLDER;
+  const blogRoot = resolve(process.cwd(), blogFolder);
   const contentDir = join(blogRoot, CONTENT_ROOT);
   const contentRoot = join(blogRoot, CONTENT_ASSETS_ROOT);
   const outputDir = join(blogRoot, OUTPUT_ROOT);
@@ -30,7 +30,7 @@ async function main() {
   const tagSummaries = buildTagSummaries(tags);
   const archives = buildArchives(posts);
   const pageSize = resolvePageSize(config);
-  const site = buildSiteMetadata(blogFolderArg, blogRoot, config);
+  const site = buildSiteMetadata(blogFolder, blogRoot, config);
   const themeResolution = await resolveTheme(blogRoot, config.theme);
   const stylesheets = await publishThemeAssets(themeResolution.themeDir, outputDir, themeResolution.theme.stylesheets ?? []);
   await processContentImages(contentRoot, outputDir, resolveImageConfig(config));
@@ -159,4 +159,6 @@ function filePathForPage(pageNumber: number): string {
   return pageNumber <= 1 ? "index.html" : join("page", String(pageNumber), "index.html");
 }
 
-await main();
+if (import.meta.main) {
+  await main(process.argv[2]);
+}
